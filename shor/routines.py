@@ -22,7 +22,7 @@ def _classical_routine_on_result(
         if e.fail_reason == util.ExitStatus.FAILED_FACTOR:
             return (util.ExitStatus.FAILED_FACTOR, e.failed_factors)
         return e.fail_reason, None
-    return (util.ExitStatus.NO_FAIL, factor)
+    return (util.ExitStatus.SUCCESS, factor)
 
 
 def find_factors(
@@ -42,7 +42,7 @@ def find_factors(
     for measurement in measurements:
         (status, factor) = _classical_routine_on_result(x, N, t, measurement)
         # print(f"status = {status} and factor = {factor}")
-        if status == util.ExitStatus.NO_FAIL:
+        if status == util.ExitStatus.SUCCESS:
             factors.extend(factor)
         elif status == util.ExitStatus.FAILED_FACTOR:
             failed_factors.extend(factor)
@@ -80,11 +80,14 @@ def plot_results(factors, failed_factors, fail_reasons):
     reason_names = [str(util.ExitStatus(reason)) for reason in reasons]
     ax2.set_xticks(numpy.arange(reasons.size))
     ax2.set_xticklabels(reason_names)
+    ax1.set_xlabel("integer factors found")
+    ax1.set_ylabel("count")
+    ax2.set_ylabel("count")
 
     plt.show()
 
 
-def example_single_run(N=21, t=12):
+def example_single_run(N=21, t=12, x=13, random_seed=14, plot=True):
     """Factorises 21 showing the quantum state of the first and second register.
 
     Highlights the measurements made in orange (probability of measuring a value determined by
@@ -93,21 +96,31 @@ def example_single_run(N=21, t=12):
     Some iterations find multiples 7 and 3, others fail
 
     """
-    numpy.random.seed(14)
-    x = 13
-    measurements = quantum.measure_system(x, N, t, reps=1, plot=True)
+    numpy.random.seed(random_seed)
+    measurements = quantum.measure_system(x, N, t, reps=1, plot=plot)
     factors, failed_factors, fail_reasons = find_factors(x, N, t, measurements)
-    print(factors)
     return factors
 
 
-def example_statistics(N=7 * 13, t=12):
+def example_statistics(N=7 * 5, t=12, reps=50):
     """Shows the statistics from iterating Shors algorithm to factorise N with t qubits.
 
     Summarise the factors found and how many failures were observed as a plot.
     """
-    numpy.random.seed(2)
-    main(N, t, plot_state=False, plot_summary=True)
+    numpy.random.seed(200)
+    main(N, t, reps=reps, plot_state=False, plot_summary=True)
+
+
+def find_good_examples(N=21, t=12):
+    """Simple loop over random seeds and random xs to find example inputs.
+
+    These examples will find non trivial factors on the first try."""
+    for x in range(1, N):
+        for random_seed in range(0, 20):
+            factors = example_single_run(N, t, x, random_seed, plot=False)
+            if factors:
+                print(N, t, x, random_seed, factors)
+                break
 
 
 def main(N, t, reps=100, plot_state=False, plot_summary=True):
@@ -122,6 +135,9 @@ def main(N, t, reps=100, plot_state=False, plot_summary=True):
     :param plot_summary:
     :return:
     """
+    all_factors = []
+    all_failed_factors = []
+    all_fail_reasons = []
     possible_xs = range(1, N)  # 1 <= x <=N
     for x in numpy.random.permutation(possible_xs):  # try a random x
         print(f"trying to factorize N={N} using random x={x}")
@@ -130,17 +146,17 @@ def main(N, t, reps=100, plot_state=False, plot_summary=True):
             continue
         measurements = quantum.measure_system(x, N, t, reps, plot=plot_state)
         factors, failed_factors, fail_reasons = find_factors(x, N, t, measurements)
-        if len(factors) > 0:
-            if plot_summary:
-                print(factors)
-                plot_results(factors, failed_factors, fail_reasons)
-            return factors
+        all_factors.extend(factors)
+        all_failed_factors.extend(all_failed_factors)
+        all_fail_reasons.extend(fail_reasons)
+    if plot_summary:
+        print(all_factors)
+        plot_results(all_factors, all_failed_factors, all_fail_reasons)
+    return all_factors
 
 
 if __name__ == "__main__":
-    example_single_run()
-    # example_statistics()
-    # t = 19
-    # N = 53 * 59
-    # N = 7 * 3
-    # main(N, t, plot_summary=True)
+    # Example from blog post: 35 = 7 * 5
+    print(example_single_run(N=35, x=8, random_seed=9, t=12))
+    # statistics of algorithm on 35
+    example_statistics(N=35, t=12)

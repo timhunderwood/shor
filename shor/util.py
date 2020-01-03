@@ -7,7 +7,7 @@ class ExitStatus(enum.IntEnum):
     NO_ORDER_FOUND = enum.auto()
     ORDER_CONDITION = enum.auto()
     FAILED_FACTOR = enum.auto()
-    NO_FAIL = enum.auto()
+    SUCCESS = enum.auto()
 
 
 class ShorError(Exception):

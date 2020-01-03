@@ -49,7 +49,6 @@ def _measure_system(
     """
     first_register = first_register.copy()
     second_register = second_register.copy()
-
     measurement_0 = numpy.random.choice(second_register)
     # print(f"measurement of 2nd register = {measurement_0}")
     mask: numpy.ndarray = second_register != measurement_0
