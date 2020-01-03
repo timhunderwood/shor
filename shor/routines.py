@@ -95,7 +95,7 @@ def example_single_run(N=21, t=12):
     """
     numpy.random.seed(14)
     x = 13
-    measurements = quantum.measure_system(x, N, t, reps=2, plot=True)
+    measurements = quantum.measure_system(x, N, t, reps=1, plot=True)
     factors, failed_factors, fail_reasons = find_factors(x, N, t, measurements)
     print(factors)
     return factors
@@ -139,7 +139,7 @@ def main(N, t, reps=100, plot_state=False, plot_summary=True):
 
 if __name__ == "__main__":
     example_single_run()
-    example_statistics()
+    # example_statistics()
     # t = 19
     # N = 53 * 59
     # N = 7 * 3

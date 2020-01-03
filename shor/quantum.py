@@ -75,6 +75,10 @@ def _measure_system(
         ax1.plot(numpy.absolute(first_register) ** 2)
         ax2.plot(numpy.absolute(state_1) ** 2)
         ax2.axvline(measured_value, color=measured_color)
+        ax0.set_ylabel("probability")
+        ax1.set_ylabel("state amplitude")
+        ax2.set_ylabel("probability")
+        ax2.set_xlabel("basis state")
         plt.show()
 
     return measured_value
