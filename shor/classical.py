@@ -1,8 +1,11 @@
+import logging
 from typing import Tuple, Optional
-
 import numpy
 import shor.util as util
 
+logging.basicConfig()
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel("INFO")
 
 def continued_fraction(numerator: int, denominator: int) -> Tuple[int, ...]:
     """Find the integer continued fraction representation of the rational measured.
@@ -120,11 +123,11 @@ def initial_checks(N: int, x: int) -> Optional[int]:
     :return: trivial factors
     """
     if N % 2 == 0:
-        print(f"N={N} was even, try factorising N/2={N//2} instead")
+        LOGGER.info(f"N={N} was even, try factorising N/2={N//2} instead")
         return 2
     gcd = numpy.gcd(x, N)
     if gcd > 1:
-        print(
+        LOGGER.info(
             f"Instantly found a factor classically gcd={gcd}. Factorize N/{gcd}={N//gcd}"
         )
         return gcd

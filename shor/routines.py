@@ -1,3 +1,4 @@
+import logging
 import enum
 import numpy
 import matplotlib.pyplot as plt
@@ -7,6 +8,8 @@ import shor.classical as classical
 import shor.quantum as quantum
 import shor.util as util
 
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel("INFO")
 
 def _classical_routine_on_result(
     N: int, t: int, x: int, measurement
@@ -51,7 +54,6 @@ def _find_factors(
     fail_reasons: List[enum.Enum] = []
     for measurement in measurements:
         (status, factor) = _classical_routine_on_result(N, t, x, measurement)
-        # print(f"status = {status} and factor = {factor}")
         if status == util.ExitStatus.SUCCESS:
             factors.extend(factor)
         elif status == util.ExitStatus.FAILED_FACTOR:
@@ -147,7 +149,7 @@ def find_good_examples(N: int = 21, t: int = 12) -> None:
         for random_seed in range(0, 20):
             factors = example_single_run(N, t, x, random_seed, plot=False)
             if factors:
-                print(N, t, x, random_seed, factors)
+                LOGGER.info(N, t, x, random_seed, factors)
                 break
 
 
@@ -170,7 +172,7 @@ def main(
     all_fail_reasons = []
     possible_xs = range(1, N)  # 1 <= x <=N
     for x in numpy.random.permutation(possible_xs):  # try a random x
-        print(f"trying to factorize N={N} using random x={x}")
+        LOGGER.info(f"trying to factorize N={N} using random x={x}")
         factor = classical.initial_checks(N, x)
         if factor is not None:
             continue
@@ -180,7 +182,7 @@ def main(
         all_failed_factors.extend(all_failed_factors)
         all_fail_reasons.extend(fail_reasons)
     if plot_summary:
-        print(all_factors)
+        LOGGER.info(all_factors)
         _plot_results(all_factors, all_failed_factors, all_fail_reasons)
     return all_factors
 

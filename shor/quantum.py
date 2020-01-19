@@ -60,7 +60,6 @@ def _measure_single_system(
     first_register = first_register.copy()
     second_register = second_register.copy()
     measurement_0 = numpy.random.choice(second_register)
-    # print(f"measurement of 2nd register = {measurement_0}")
     mask: numpy.ndarray = second_register != measurement_0
     first_register[mask] = 0
     normalisation *= numpy.sqrt(
@@ -71,7 +70,6 @@ def _measure_single_system(
     state_1_pdf = numpy.absolute(state_1) ** 2
 
     measured_value = _measure(state_1_pdf)
-    # print(f"Measured value (for phase approximation) = {measured_value}")
 
     if plot:
         general_color = "#1f77b4"
