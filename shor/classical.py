@@ -1,11 +1,19 @@
-from typing import Tuple
-
+import logging
+from typing import Tuple, Optional
 import numpy
 import shor.util as util
 
+logging.basicConfig()
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel("INFO")
 
 def continued_fraction(numerator: int, denominator: int) -> Tuple[int, ...]:
-    """Find the integer continued fraction representation of the rational measured."""
+    """Find the integer continued fraction representation of the rational measured.
+
+    :param numerator: numerator of continued fraction
+    :param denominator: denominator of continued fraction
+    :return: Tuple representation of continue fraction
+    """
     if denominator == 1:
         return (numerator,)
     if denominator == 0:
@@ -15,39 +23,63 @@ def continued_fraction(numerator: int, denominator: int) -> Tuple[int, ...]:
     )
 
 
-def convergent(continued_fractions: Tuple[int, ...],) -> Tuple[int, int]:
-    """Get the convergent for a given continued fractions sequence of integers"""
+def _convergent(continued_fractions: Tuple[int, ...],) -> Tuple[int, int]:
+    """Get the convergent for a given continued fractions sequence of integers
+
+    :param continued_fractions: Tuple representation of continued fraction
+    :return: reduced continued fraction representation of convergent
+    """
     num, den = 1, 0
     for u in reversed(continued_fractions):
         num, den = den + num * u, num
     return num, den
 
 
-def convergents(continued_fractions: Tuple[int, ...]) -> Tuple[Tuple[int, int], ...]:
+def _convergents(continued_fractions: Tuple[int, ...]) -> Tuple[Tuple[int, int], ...]:
     """Get all the convergents possible given the complete continued fraction.
-    Theorem 5.1 means that one of these must be the true fraction, excluding the error
-    and the denominator can be used for r in our order finding.
+
+    One of these must be the true fraction, excluding the error.
+
+    :param continued_fractions:
+    :return: Tuple of all convergents found (each convergent is a Tuple[int,int])
     """
     return tuple(
-        convergent(continued_fractions[:m]) for m in range(len(continued_fractions) + 1)
+        _convergent(continued_fractions[:m])
+        for m in range(len(continued_fractions) + 1)
     )
 
 
 def possible_orders(convergents_vals: Tuple[Tuple[int, int], ...]) -> Tuple[int, ...]:
     """Given the (numerator, denominator) pairs, extract the denominators which represent the possible
-    order r and do not include trivial cases of 0 or 1."""
+    order r and do not include trivial cases of 0 or 1.
+
+    :param convergents_vals:
+    :return: Tuple of possible orders
+    """
     return tuple(c[1] for c in convergents_vals if (c[1] != 0 and c[1] != 1))
 
 
-def is_order(r: int, x: int, N: int) -> bool:
-    """Return True if r is the order of x % N"""
+def _is_order(N: int, x: int, r: int) -> bool:
+    """Return True if r is the order of x % N
+
+    :param N: number to factorise
+    :param x: random integer 0 < x < N
+    :param r: integer we are testing is the order of x mod N
+    :return:
+    """
     return ((x ** r) % N) == 1
 
 
-def first_order(possible_orders: Tuple[int, ...], x: int, N: int) -> int:
-    """Get the first true order in the list of possible orders."""
+def first_order(N: int, x: int, possible_orders: Tuple[int, ...]) -> int:
+    """Get the first true order in the list of possible orders.
+
+    :param N: number to factorise
+    :param x: random integer 0 < x < N
+    :param possible_orders: Tuple of integer possible orders
+    :return: first r in possible orders that is a true order of x mod N
+    """
     for r in possible_orders:
-        if is_order(r, x, N):
+        if _is_order(N, x, r):
             return r
     raise util.ShorError(
         f"In list of possible orders no order of N was "
@@ -56,8 +88,14 @@ def first_order(possible_orders: Tuple[int, ...], x: int, N: int) -> int:
     )
 
 
-def find_factor_from_order(r: int, x: int, N: int) -> Tuple[int, ...]:
-    """Given an order r of x % N, try to find non trivial factors of N."""
+def find_factor_from_order(N: int, x: int, r: int) -> Tuple[int, ...]:
+    """Given an order r of x % N, try to find non trivial factors of N.
+
+    :param N: number to factorise
+    :param x: random integer 0 < x < N
+    :param r: order of x mod N
+    :return:
+    """
     if r % 2 == 0 and (x ** (r // 2) % N != N - 1):
         gcd_1 = numpy.gcd(x ** (r // 2) - 1, N)
         gcd_2 = numpy.gcd(x ** (r // 2) + 1, N)
@@ -77,14 +115,19 @@ def find_factor_from_order(r: int, x: int, N: int) -> Tuple[int, ...]:
     )
 
 
-def initial_checks(N, x):
-    """Perform simple initial checks on N and x to see if factors of N can be found classically and quickly."""
+def initial_checks(N: int, x: int) -> Optional[int]:
+    """Perform simple initial checks on N and x to see if factors of N can be found classically and quickly.
+
+    :param N: number to factorise
+    :param x: random integer 0 < x < N
+    :return: trivial factors
+    """
     if N % 2 == 0:
-        print(f"N={N} was even, try factorising N/2={N//2} instead")
+        LOGGER.info(f"N={N} was even, try factorising N/2={N//2} instead")
         return 2
     gcd = numpy.gcd(x, N)
     if gcd > 1:
-        print(
+        LOGGER.info(
             f"Instantly found a factor classically gcd={gcd}. Factorize N/{gcd}={N//gcd}"
         )
         return gcd
