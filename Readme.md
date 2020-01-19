@@ -1,4 +1,4 @@
-# Project Title
+# Shor
 
 An Educational python walkthrough of Shor's quantum algorithm for factorising numbers. 
 
